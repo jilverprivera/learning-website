@@ -1,4 +1,4 @@
-<h1 align="center">Django / React Ecommerce</h1>
+<h1 align="center">Learning Website</h1>
 
 ## ⚙️ Backend Local Instalation 
 - Go to the root project folder.
