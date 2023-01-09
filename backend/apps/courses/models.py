@@ -89,9 +89,9 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
-    def get_video(self):
+    def get_sale_video(self):
         if self.thumbnail:
-            return self.sales_video.url
+            return self.sale_video.url
         return ''
 
     def get_thumbnail(self):
@@ -116,7 +116,6 @@ class Course(models.Model):
     def get_total_stars(self):
         self.total_stars = len(self.comments.all())
         self.save()
-
 
     def get_total_lectures(self):
         lectures=0
@@ -172,7 +171,7 @@ class Section(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, blank=True, null=True)
     section_number = models.IntegerField(blank=True, null=True)
-    episodes = models.ManyToManyField('Episode', blank=True)
+    lessons = models.ManyToManyField('Lesson', blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -183,24 +182,24 @@ class Section(models.Model):
 
     def total_length(self):
         total = Decimal(0.00)
-        for episode in self.episodes.all():
-            total += episode.length
+        for lesson in self.lessons.all():
+            total += lesson.length
         return get_timer(total, type='min')
 
 
-class Episode(models.Model):
+class Lesson(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to=course_lessons_path, validators=[validate_video])
+    file = models.FileField(upload_to=course_lessons_path)
     content = models.TextField()
     length = models.DecimalField(max_digits=100, decimal_places=2)
     resources = models.ManyToManyField('Resource', blank=True)
     questions = models.ManyToManyField('Question', blank=True)
-    episode_number = models.IntegerField(blank=True, null=True, default=0)
+    lesson_number = models.IntegerField(blank=True, null=True, default=0)
 
     class Meta:
-        ordering = ('episode_number',)
+        ordering = ('lesson_number',)
 
     def __str__(self):
         return self.title

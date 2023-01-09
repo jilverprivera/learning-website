@@ -16,6 +16,7 @@ urlpatterns = [
 
 
     path('api/', include('apps.category.api.urls'), name='category_routes'),
+    path('api/', include('apps.courses.urls'), name='category_routes'),
 
     path('', TemplateView.as_view(template_name='index.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

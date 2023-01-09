@@ -20,7 +20,7 @@ class CommentSerializer(serializers.ModelSerializer):
             'user_image',
             'star_number',
             'message',
-            'created_at',
+            'date_created',
         )
 
     def get_email(self, obj):
@@ -33,4 +33,4 @@ class CommentSerializer(serializers.ModelSerializer):
         return obj.user.first_name + ' ' + obj.user.last_name
 
     def get_user_image(self, obj):
-        return 'http://127.0.0.1:8000' + obj.user.image.url
+        return obj.user.image.url
