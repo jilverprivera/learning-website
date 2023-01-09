@@ -25,13 +25,13 @@ admin.site.register(Rating)
 # admin.site.register(PaidCoursesLibrary)
 
 
-class EpisodeAdmin(admin.ModelAdmin):
+class LessonAdmin(admin.ModelAdmin):
     list_display = ('uuid', 'title',)
     list_display_links = ('uuid', 'title', )
     list_filter = ('uuid', )
     search_fields = ('uuid', 'content', 'title')
     list_per_page = 25
-admin.site.register(Episode, EpisodeAdmin)
+admin.site.register(Lesson, LessonAdmin)
 
 # class SectorAdmin(admin.ModelAdmin):
 #     list_display = ('id', 'title',)
