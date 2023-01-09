@@ -64,24 +64,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env.get_value('DB_NAME'),
+        'USER': env.get_value('DB_USER'),
+        'PASSWORD': env.get_value('DB_PASSWORD'),
+        'HOST': env.get_value('DB_HOST'),
+        'PORT': env.get_value('DB_PORT'),
     }
 }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'auth_system',
-#         'USER': 'postgres',
-#         'PASSWORD': '[YOUR DATABASE PASSWORD]',
-#         'HOST': 'localhost'
-#     }
-# }
-
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
 AUTH_PASSWORD_VALIDATORS = [
