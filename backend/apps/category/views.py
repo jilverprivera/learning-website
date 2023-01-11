@@ -18,7 +18,7 @@ class CategoryListView(APIView):
         if serialized_categories:
             return Response(serialized_categories.data, status=status.HTTP_200_OK)
         else:
-            return Response({'Error': 'No categories found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'Error': 'No categories created yet.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class LatestCategoriesView(APIView):

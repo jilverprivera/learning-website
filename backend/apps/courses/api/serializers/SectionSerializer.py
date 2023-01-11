@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.courses.models import Section
-from .lessonSerializer import LessonSerializer
+from .LessonSerializer import LessonSerializer
 
 
 class SectionSerializer(serializers.ModelSerializer):

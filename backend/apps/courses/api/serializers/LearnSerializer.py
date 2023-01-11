@@ -2,7 +2,7 @@ from rest_framework import serializers
 from apps.courses.models import WhatLearnt
 
 
-class LearntSerializer(serializers.ModelSerializer):
+class LearnSerializer(serializers.ModelSerializer):
     class Meta:
         model = WhatLearnt
         fields = [

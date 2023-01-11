@@ -44,6 +44,13 @@ VOTES_CHOICES = (
     ('Down', 'Down Vote'),
 )
 
+PRICING_STATUS_CHOICES = (
+    ('pending', 'Pending'),
+    ('active', 'Active'),
+    ('trialing', 'Trialing')
+)
+
+
 class Course(models.Model):
     
     class PostObjects(models.Manager):
@@ -65,20 +72,19 @@ class Course(models.Model):
     sold = models.IntegerField(default=0, blank=True)
     course_length = models.CharField(default=0, max_length=64)
     best_seller = models.BooleanField(default=False)
+    total_stars = models.IntegerField(default=0)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    published_at = models.DateTimeField(default=timezone.now)
     
+    pricing_tiers = models.ManyToManyField("Pricing", blank=True)
     what_learnt = models.ManyToManyField('WhatLearnt', blank=True)
     requisite = models.ManyToManyField('Requisite', blank=True)
-    
     sections = models.ManyToManyField('Section', blank=True)
     resources = models.ManyToManyField('Resource', blank=True)
     questions = models.ManyToManyField('Question', blank=True)
-
     comments = models.ManyToManyField("Comment", blank=True)
-    total_stars = models.IntegerField(default=0)
 
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     date_created = models.DateTimeField(auto_now_add=True)
-    published_at = models.DateTimeField(default=timezone.now)
 
     objects = models.Manager() 
     postobjects = PostObjects()
@@ -111,11 +117,9 @@ class Course(models.Model):
         return star
 
     def get_number_starts(self):
-        return len(self.comments.all())
-
-    def get_total_stars(self):
         self.total_stars = len(self.comments.all())
         self.save()
+        return len(self.comments.all())
 
     def get_total_lectures(self):
         lectures=0
@@ -129,6 +133,46 @@ class Course(models.Model):
             for episode in section.episodes.all():
                 length +=episode.length
         return get_timer(length)
+
+
+# ---- PRICING ---- #
+class Pricing(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
+    stripe_price_id = models.CharField(max_length=128)
+    name= models.CharField(max_length=64)
+    slug = models.SlugField(unique=True)
+    price = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    currency = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.name
+
+    def get_slug(self):
+        slug = self.name.lower().split(' ')
+        if not self.slug:
+            self.slug = "-".join(slug)
+            self.save()
+        return slug
+
+
+# ---- SUBSCRIPTION ---- #
+class Subscription(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    pricing = models.ForeignKey(Pricing, on_delete=models.CASCADE, related_name='pricing_subscriptions')
+    status = models.CharField(max_length=32, choices=PRICING_STATUS_CHOICES, default='pending')
+    stripe_subscription_id = models.CharField(max_length=128)
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_created']
+
+    def __str__(self):
+        return self.user.email
+
+    @property
+    def is_active(self):
+        return self.status == "active" or self.status == "trialing"
 
 
 class Comment(models.Model):
@@ -272,26 +316,26 @@ class Answer(models.Model):
         return self.user.first_name + ' ' + self.user.last_name
 
     def calculate_positive_votes(self):
-        up_votes = Rating.objects.filter(answer=self, vote='Up').count()
+        up_votes = Vote.objects.filter(answer=self, vote='Up').count()
         self.positive_votes = up_votes
         self.save()
         return self.positive_votes
 
     def calculate_negative_votes(self):
-        down_votes = Rating.objects.filter(answer=self, vote='Down').count()
+        down_votes = Vote.objects.filter(answer=self, vote='Down').count()
         self.negative_votes = down_votes
         self.save()
         return self.negative_votes
 
     def calculate_votes(self):
-        up_votes = Rating.objects.filter(answer=self, vote='Up').count()
-        down_votes = Rating.objects.filter(answer=self, vote='Down').count()
+        up_votes = Vote.objects.filter(answer=self, vote='Up').count()
+        down_votes = Vote.objects.filter(answer=self, vote='Down').count()
         self.votes = up_votes - down_votes
         self.save()
         return self.votes
 
 
-class Rating(models.Model):
+class Vote(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='answer_votes')
@@ -302,42 +346,23 @@ class Rating(models.Model):
         ordering = ('-date_created',)
 
 
-# class Sector(models.Model):
-#     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-#     title = models.CharField(max_length=255)
-#     sub_title = models.CharField(max_length=255)
-#     description = models.TextField()
-#     related_courses = models.ManyToManyField('Course', blank=True)
-#     thumbnail = models.ImageField(upload_to=sector_directory_path)
-#     # created_at = models.DateTimeField(auto_now_add=True)
+class CoursesLibrary(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    courses = models.ManyToManyField(Course, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Bookmarked Courses Library"
+
+    def __str__(self):
+        return self.author.email
 
 
-#     def __str__(self):
-#         return self.title
+class PaidCoursesLibrary(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    courses = models.ManyToManyField(Course, blank=True)
 
-#     def get_thumbnail(self):
-#         if self.thumbnail:
-#             return self.thumbnail.url
-#         return ''
+    class Meta:
+        verbose_name_plural = "Purchased Courses Library"
 
-
-# class CoursesLibrary(models.Model):
-#     author = models.ForeignKey(User, on_delete=models.CASCADE)
-#     courses = models.ManyToManyField(Course, blank=True)
-
-#     class Meta:
-#         verbose_name_plural = "Bookmarked Courses Library"
-
-#     def __str__(self):
-#         return self.author.account
-
-
-# class PaidCoursesLibrary(models.Model):
-#     author = models.ForeignKey(User, on_delete=models.CASCADE)
-#     courses = models.ManyToManyField(Course, blank=True)
-
-#     class Meta:
-#         verbose_name_plural = "Purchased Courses Library"
-
-#     def __str__(self):
-#         return self.author.account
+    def __str__(self):
+        return self.author.email

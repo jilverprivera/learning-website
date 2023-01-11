@@ -36,7 +36,6 @@ def get_courses_list(request):
 
 
 def create_course(self, request):
-
     data = self.request.data
     account = data['account']
     subcategory = data['subcategory_uuid']

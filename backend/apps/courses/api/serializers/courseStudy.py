@@ -1,17 +1,16 @@
 from rest_framework import serializers
 
-
-from ..models import *
+from apps.courses.models import Course
 
 from account.serializers import UserSerializer
 from apps.category.api.serializer import SubCategorySerializer
-from .commentSerializer import CommentSerializer
-from .sectionSerializer import SectionSerializer
-from .learnSerializer import LearntSerializer
-from .requisiteSerializer import RequisiteSerializer
+from apps.courses.api.serializers.CommentSerializer import CommentSerializer
+from apps.courses.api.serializers.LearnSerializer import LearnSerializer
+from apps.courses.api.serializers.RequisiteSerializer import RequisiteSerializer
+from apps.courses.api.serializers.SectionSerializer import SectionSerializer
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseStudySerializer(serializers.ModelSerializer):
     thumbnail = serializers.CharField(source='get_thumbnail')
     subcategory = SubCategorySerializer()
     author = UserSerializer()
@@ -20,9 +19,10 @@ class CourseSerializer(serializers.ModelSerializer):
     total_stars = serializers.IntegerField(source='get_number_starts')
     total_lectures = serializers.IntegerField(source="get_total_lectures")
     total_duration = serializers.CharField(source='total_course_length')
+
     comments = CommentSerializer(many=True)
     sections = SectionSerializer(many=True)
-    what_learnt = LearntSerializer(many=True)
+    what_learnt = LearnSerializer(many=True)
     requisite = RequisiteSerializer(many=True)
 
     class Meta:
@@ -50,28 +50,4 @@ class CourseSerializer(serializers.ModelSerializer):
             "sections",
             "what_learnt",
             "requisite",
-        ]
-
-
-class CourseDisplaySerializer(serializers.Serializer):
-    author = UserSerializer()
-    subcategory = SubCategorySerializer()
-    stars = serializers.IntegerField(source='get_stars')
-    sale_video = serializers.CharField(source='get_sale_video')
-    thumbnail = serializers.CharField(source='get_thumbnail')
-
-    class Meta:
-        model = Course
-        fields = [
-            'uuid',
-            'subcategory',
-            'author',
-            'title',
-            'description',
-            'course_type'
-            'price'
-            'stars',
-            'thumbnail',
-            'sale_video',
-            'best_seller'
         ]
