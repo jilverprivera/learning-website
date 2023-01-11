@@ -2,9 +2,9 @@ from rest_framework.views import APIView
 from rest_framework import status, permissions
 from rest_framework.response import Response
 
-from apps.courses.api.serializers.courseDisplayList import CourseDisplayListSerializer
-from apps.courses.api.serializers.courseDetail import CourseDetailSerializer
-from apps.courses.api.serializers.courseStudy import CourseStudySerializer
+from apps.courses.api.serializers.courseDisplayListSerializer import *
+from apps.courses.api.serializers.courseDetailSerializer import *
+from apps.courses.api.serializers.courseStudySerializer import *
 
 from apps.courses.models import Course
 
