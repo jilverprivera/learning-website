@@ -1,0 +1,43 @@
+- COURSE
+  - uuid
+  - subcategory
+  - author
+  - title
+  - description
+  - content
+  - thumbnail
+  - sale video
+  - course type
+  - price
+  - discount price
+  - sold
+  - total stars
+  - stars (serializer)
+  - course length
+  - status
+  - publication date
+  - creation date
+  - pricing <-->
+  - learns <-->
+  - requisite <-->
+  - sections <-->
+  - resources <-->
+  - questions <-->
+  - comments <-->
+
+- PRICING
+  - uuid
+  - stripe price id
+  - name
+  - slug
+  - price
+  - currency
+
+- SUBSCRIPTION
+  - uuid
+  - user
+  - pricing
+  - status
+  - stripe subscriptions id
+  - created date
+

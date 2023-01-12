@@ -13,6 +13,7 @@ from helpers.get_timer import get_timer
 from helpers.validate_video import validate_video
 
 
+
 def course_thumbnail_directory_path(instance, filename):
     return 'courses/{0}/{1}'.format(instance.author.uuid, filename)
 
@@ -44,6 +45,13 @@ VOTES_CHOICES = (
     ('Down', 'Down Vote'),
 )
 
+PRICING_STATUS_CHOICES = (
+    ('pending', 'Pending'),
+    ('active', 'Active'),
+    ('trialing', 'Trialing')
+)
+
+
 class Course(models.Model):
     
     class PostObjects(models.Manager):
@@ -61,30 +69,28 @@ class Course(models.Model):
     sale_video = models.FileField(upload_to=course_sale_video_path, null=False, blank=True)
     course_type = models.CharField(max_length=100, choices=PAYMENT_CHOICES, default='paid')
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0)
-    compare_price = models.DecimalField(max_digits=6, decimal_places=2, default=0, blank=True, null=True)
+    discount_price = models.DecimalField(max_digits=6, decimal_places=2, default=0, blank=True, null=True)
     sold = models.IntegerField(default=0, blank=True)
     course_length = models.CharField(default=0, max_length=64)
     best_seller = models.BooleanField(default=False)
-    
-    what_learnt = models.ManyToManyField('WhatLearnt', blank=True)
-    requisite = models.ManyToManyField('Requisite', blank=True)
-    
-    sections = models.ManyToManyField('Section', blank=True)
-    resources = models.ManyToManyField('Resource', blank=True)
-    questions = models.ManyToManyField('Question', blank=True)
-
-    comments = models.ManyToManyField("Comment", blank=True)
     total_stars = models.IntegerField(default=0)
-
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
-    date_created = models.DateTimeField(auto_now_add=True)
-    published_at = models.DateTimeField(default=timezone.now)
+    
+    pricing_tiers = models.ManyToManyField("pricing.Pricing", blank=True)
+    # what_learnt = models.ManyToManyField('WhatLearnt', blank=True)
+    requisite = models.ManyToManyField('requisites.Requisite', blank=True)
+    sections = models.ManyToManyField('sections.Section', blank=True)
+    resources = models.ManyToManyField('resources.Resource', blank=True)
+    comments = models.ManyToManyField('comments.Comment', blank=True, related_name='comments')
+
+    publication_date = models.DateTimeField(default=timezone.now)
+    creation_date = models.DateTimeField(auto_now_add=True)
 
     objects = models.Manager() 
     postobjects = PostObjects()
 
     class Meta:
-        ordering = ('-date_created',)
+        ordering = ('-creation_date',)
 
     def __str__(self):
         return self.title
@@ -111,11 +117,9 @@ class Course(models.Model):
         return star
 
     def get_number_starts(self):
-        return len(self.comments.all())
-
-    def get_total_stars(self):
         self.total_stars = len(self.comments.all())
         self.save()
+        return len(self.comments.all())
 
     def get_total_lectures(self):
         lectures=0
@@ -128,216 +132,43 @@ class Course(models.Model):
         for section in self.sections.all():
             for episode in section.episodes.all():
                 length +=episode.length
+        self.course_length = length
+        self.save()
         return get_timer(length)
 
 
-class Comment(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    star_number = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)], default=0)
-    message = models.TextField()
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = 'Comment'
-        verbose_name_plural = 'Comments'
-        ordering = ('-date_created',)
 
 
-class WhatLearnt(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    date_created = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.title
-
-
-class Requisite(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-
-
-class Section(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255, blank=True, null=True)
-    section_number = models.IntegerField(blank=True, null=True)
-    lessons = models.ManyToManyField('Lesson', blank=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ('section_number',)
-
-    def __str__(self):
-        return self.title
-
-    def total_length(self):
-        total = Decimal(0.00)
-        for lesson in self.lessons.all():
-            total += lesson.length
-        return get_timer(total, type='min')
-
-
-class Lesson(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    file = models.FileField(upload_to=course_lessons_path)
-    content = models.TextField()
-    length = models.DecimalField(max_digits=100, decimal_places=2)
-    resources = models.ManyToManyField('Resource', blank=True)
-    questions = models.ManyToManyField('Question', blank=True)
-    lesson_number = models.IntegerField(blank=True, null=True, default=0)
-
-    class Meta:
-        ordering = ('lesson_number',)
-
-    def __str__(self):
-        return self.title
-
-    def get_video_length(self):
-        try:
-            video = MP4(self.file)
-            return video.info.length
-        except MP4StreamInfoError:
-            return 0.0
-
-    def get_video_length_time(self):
-        return get_timer(self.length)
-
-    def save(self, *args, **kwargs):
-        self.length = self.get_video_length()
-        return super().save(*args, **kwargs)
-
-
-class Resource(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    file = models.FileField(upload_to=course_resources_path, blank=True, null=True)
-    url = models.URLField(blank=True, null=True)
-
-    def __str__(self):
-        return self.title
-
-    def get_absolute_url(self):
-        return self.file.url
-
-
-class Question(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100)
-    message = models.TextField()
-    accepted_answer = models.BooleanField(default=False)
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ('-date_created',)
-
-    def __str__(self):
-        return self.title
-
-    def get_answers(self):
-        return Answer.objects.filter(question=self)
-
-    def get_answers_count(self):
-        return Answer.objects.filter(question=self).count()
-
-
-class Answer(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    message = models.TextField()
-    is_accepted_answer = models.BooleanField(default=False)
-    positive_votes = models.IntegerField(default=0)
-    negative_votes = models.IntegerField(default=0)
-    votes = models.IntegerField(default=0)
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ('-date_created',)
-
-    def __str__(self):
-        return self.user.first_name + ' ' + self.user.last_name
-
-    def calculate_positive_votes(self):
-        up_votes = Rating.objects.filter(answer=self, vote='Up').count()
-        self.positive_votes = up_votes
-        self.save()
-        return self.positive_votes
-
-    def calculate_negative_votes(self):
-        down_votes = Rating.objects.filter(answer=self, vote='Down').count()
-        self.negative_votes = down_votes
-        self.save()
-        return self.negative_votes
-
-    def calculate_votes(self):
-        up_votes = Rating.objects.filter(answer=self, vote='Up').count()
-        down_votes = Rating.objects.filter(answer=self, vote='Down').count()
-        self.votes = up_votes - down_votes
-        self.save()
-        return self.votes
-
-
-class Rating(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='answer_votes')
-    vote = models.CharField(choices=VOTES_CHOICES, max_length=4)
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ('-date_created',)
-
-
-# class Sector(models.Model):
+# class WhatLearnt(models.Model):
 #     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
 #     title = models.CharField(max_length=255)
-#     sub_title = models.CharField(max_length=255)
 #     description = models.TextField()
-#     related_courses = models.ManyToManyField('Course', blank=True)
-#     thumbnail = models.ImageField(upload_to=sector_directory_path)
-#     # created_at = models.DateTimeField(auto_now_add=True)
-
+#     date_created = models.DateTimeField(auto_now_add=True)
 
 #     def __str__(self):
 #         return self.title
 
-#     def get_thumbnail(self):
-#         if self.thumbnail:
-#             return self.thumbnail.url
-#         return ''
 
 
-# class CoursesLibrary(models.Model):
-#     author = models.ForeignKey(User, on_delete=models.CASCADE)
-#     courses = models.ManyToManyField(Course, blank=True)
+class CoursesLibrary(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    courses = models.ManyToManyField(Course, blank=True)
 
-#     class Meta:
-#         verbose_name_plural = "Bookmarked Courses Library"
+    class Meta:
+        verbose_name_plural = "Bookmarked Courses Library"
 
-#     def __str__(self):
-#         return self.author.account
+    def __str__(self):
+        return self.author.email
 
 
-# class PaidCoursesLibrary(models.Model):
-#     author = models.ForeignKey(User, on_delete=models.CASCADE)
-#     courses = models.ManyToManyField(Course, blank=True)
+class PaidCoursesLibrary(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    courses = models.ManyToManyField(Course, blank=True)
 
-#     class Meta:
-#         verbose_name_plural = "Purchased Courses Library"
+    class Meta:
+        verbose_name_plural = "Purchased Courses Library"
 
-#     def __str__(self):
-#         return self.author.account
+    def __str__(self):
+        return self.author.email
