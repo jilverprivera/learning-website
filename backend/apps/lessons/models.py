@@ -22,6 +22,8 @@ class Lesson(models.Model):
     lesson_number = models.IntegerField(blank=True, null=True, default=0)
 
     class Meta:
+        verbose_name = 'Lesson'
+        verbose_name_plural = 'Lessons'
         ordering = ('lesson_number',)
 
     def __str__(self):
@@ -30,6 +32,8 @@ class Lesson(models.Model):
     def get_video_length(self):
         try:
             video = MP4(self.file)
+            self.length = video.info.length
+            self.save()
             return video.info.length
         except MP4StreamInfoError:
             return 0.0

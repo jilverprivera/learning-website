@@ -12,8 +12,7 @@ class Resource(models.Model):
     uuid = models.UUIDField(default=uuid4, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    file = models.FileField(
-        upload_to=course_resources_path, blank=True, null=True)
+    file = models.FileField(upload_to=course_resources_path, blank=True, null=True)
     url = models.URLField(blank=True, null=True)
 
     def __str__(self):
