@@ -10,6 +10,7 @@ type Props = {
 
 const PublicRoute = ({ component: RouteComponent }: Props) => {
   const { logged } = useContext(AuthContext);
+  
 
   const isLogged = false;
   if (!logged) {

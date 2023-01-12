@@ -8,7 +8,6 @@ import type {
   UserType,
 } from "../types/authContext";
 import type { childrenProps } from "../types/layout";
-import { checkToken } from "../helpers/checkToken";
 import { ProductType } from "../types/productType";
 
 const AuthContext = createContext({} as AuthTypes);
@@ -28,9 +27,12 @@ export const AuthProvider = ({ children }: childrenProps) => {
   const [wishList, setWishList] = useState<any[]>([]);
 
   useEffect(() => {
-    const authToken: TokenTypes = checkToken();
-    if (authToken) {
-      setToken({ access: authToken.access, refresh: authToken.refresh });
+    const token = localStorage.getItem('token') || '';
+    if (token !== '') {
+      const authToken: TokenTypes = JSON.parse(token);
+      if (authToken) {
+        setToken({ access: authToken.access, refresh: authToken.refresh });
+      }
     }
   }, []);
 
