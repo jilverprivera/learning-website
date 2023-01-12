@@ -29,8 +29,18 @@ THIRD_PARTY_APPS = [
 ]
 PROJECT_APPS = [
     'account',
+    'apps.answers',
     'apps.category',
+    'apps.comments',
     'apps.courses',
+    'apps.lessons',
+    'apps.pricing',
+    'apps.questions',
+    'apps.requisites',
+    'apps.resources',
+    'apps.sections',
+    'apps.subscriptions',
+    'apps.votes',
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
@@ -91,13 +101,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'es-co'
+LANGUAGE_CODE = 'en-US'
 TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-#AWS Configuration
+# AWS Configuration
 AWS_ACCESS_KEY_ID = env.get_value('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env.get_value('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = env.get_value('AWS_STORAGE_BUCKET_NAME')

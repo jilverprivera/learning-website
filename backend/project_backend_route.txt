@@ -9,11 +9,14 @@
   - sale video
   - course type
   - price
-  - compare price
+  - discount price
   - sold
   - total stars
+  - stars (serializer)
+  - course length
   - status
-  - published date
+  - publication date
+  - creation date
   - pricing <-->
   - learns <-->
   - requisite <-->
@@ -21,7 +24,6 @@
   - resources <-->
   - questions <-->
   - comments <-->
-  - created date
 
 - PRICING
   - uuid
