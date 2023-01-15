@@ -40,17 +40,6 @@ PAYMENT_CHOICES = (
     ('free', 'Free'),
 )
 
-VOTES_CHOICES = (
-    ('Up', 'Up Vote'),
-    ('Down', 'Down Vote'),
-)
-
-PRICING_STATUS_CHOICES = (
-    ('pending', 'Pending'),
-    ('active', 'Active'),
-    ('trialing', 'Trialing')
-)
-
 
 class Course(models.Model):
     
@@ -70,6 +59,7 @@ class Course(models.Model):
     course_type = models.CharField(max_length=100, choices=PAYMENT_CHOICES, default='paid')
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     discount_price = models.DecimalField(max_digits=6, decimal_places=2, default=0, blank=True, null=True)
+    discount_time = models.DateTimeField(default=timezone.now)
     sold = models.IntegerField(default=0, blank=True)
     course_length = models.CharField(default=0, max_length=64)
     best_seller = models.BooleanField(default=False)
@@ -77,7 +67,7 @@ class Course(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     
     pricing_tiers = models.ManyToManyField("pricing.Pricing", blank=True)
-    # what_learnt = models.ManyToManyField('WhatLearnt', blank=True)
+    learnings = models.ManyToManyField('learnings.Learning', blank=True)
     requisite = models.ManyToManyField('requisites.Requisite', blank=True)
     sections = models.ManyToManyField('sections.Section', blank=True)
     resources = models.ManyToManyField('resources.Resource', blank=True)
@@ -127,7 +117,7 @@ class Course(models.Model):
             lectures+=len(section.episodes.all())
         return lectures
 
-    def total_course_length(self):
+    def get_total_course_length(self):
         length=Decimal(0.00)
         for section in self.sections.all():
             for episode in section.episodes.all():

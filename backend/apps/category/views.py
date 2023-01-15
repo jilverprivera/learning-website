@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 
 from .models import Category, SubCategory
-from .api.serializer import CategorySerializer, SubCategorySerializer
+from .serializers import CategorySerializer, SubCategorySerializer
 
 
 class CategoryListView(APIView):
@@ -11,8 +11,8 @@ class CategoryListView(APIView):
 
     def get(self, request, format=None):
         sort_by = request.query_params.get('sort_by')
-        if not (sort_by == 'created_at' or sort_by == 'name'):
-            sort_by = '-created_at'
+        if not (sort_by == 'date_created' or sort_by == 'name'):
+            sort_by = '-date_created'
         categories = Category.objects.order_by(sort_by).all()
         serialized_categories = CategorySerializer(categories, many=True)
         if serialized_categories:
@@ -25,7 +25,7 @@ class LatestCategoriesView(APIView):
     permission_classes = (permissions.AllowAny, )
 
     def get(self, request, format=None):
-        categories = Category.objects.order_by('-created_at').all()[0:4]
+        categories = Category.objects.order_by('-date_created').all()[0:4]
         serialized_categories = CategorySerializer(categories, many=True)
         if serialized_categories:
             return Response(serialized_categories.data, status=status.HTTP_200_OK)

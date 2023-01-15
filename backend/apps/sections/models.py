@@ -12,7 +12,7 @@ class Section(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, blank=True, null=True)
     section_number = models.IntegerField(blank=True, null=True)
-    lessons = models.ManyToManyField('lessons.Lesson', blank=True)
+    # lessons = models.ManyToManyField('lessons.Lesson', blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

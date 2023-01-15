@@ -1,3 +1,14 @@
+- course
+  - learnings
+  - requisites
+  - sections
+    - lessons
+      - questions
+        - answers
+          - votes
+  - resources
+  - comments
+
 - COURSE
   - uuid
   - subcategory
@@ -40,4 +51,5 @@
   - status
   - stripe subscriptions id
   - created date
+
 

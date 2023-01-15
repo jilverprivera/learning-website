@@ -12,6 +12,7 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = [
+            'id',
             'uuid',
             'user',
             'title',
