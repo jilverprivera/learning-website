@@ -1,11 +1,12 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import UserSerializer
-from .models import User
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from .serializers import UserSerializer
+from .models import User
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -26,26 +27,23 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
-@api_view(['GET'])
-def users(request):
-    if request.method == 'GET':
-        user = User.objects.all()
-        print(user)
-        serializer = UserSerializer(user, many=True)
-        return Response(serializer.data)
+class UserListView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request, format=None):
+        users = User.objects.all()
+        if len(users) == 0:
+            Response({'Success': 'No users found.'}, status=status.HTTP_204_NO_CONTENT)
+        serialized_users = UserSerializer(users, many=True)
+        return Response(serialized_users.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-def getUserByID(request, pk):
-    if request.method == 'GET':
-        user = User.objects.all().filter(id=pk)
-        serializer = UserSerializer(user, many=True)
-        return Response(serializer.data)
+class SingleUserView(APIView):
+    permission_classes = [permissions.IsAdminUser]
 
-
-@api_view(['GET'])
-def getUserByEmail(request, email):
-    if request.method == 'GET':
-        user = User.objects.all().filter(email=email)
-        serializer = UserSerializer(user, many=True)
-        return Response(serializer.data)
+    def get(self, request, user_uuid, format=None):
+        if not User.objects.filter(uuid=user_uuid).exists():
+            Response({'Error': 'User with uuid: {} not found.'.format(user_uuid)}, status=status.HTTP_404_NOT_FOUND)
+        user  = User.objects.get(uuid=user_uuid)
+        serialized_user = UserSerializer(user)
+        return Response(serialized_user.data, status=status.HTTP_200_OK)
