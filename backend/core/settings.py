@@ -39,6 +39,7 @@ PROJECT_APPS = [
     'apps.category',
     'apps.comments',
     'apps.courses',
+    'apps.learnings',
     'apps.lessons',
     'apps.pricing',
     'apps.questions',

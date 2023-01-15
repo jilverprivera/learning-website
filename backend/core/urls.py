@@ -13,8 +13,11 @@ urlpatterns = [
     path('auth/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    path('api/v1/', include('apps.category.api.urls'), name='category_routes'),
-    path('api/v1/', include('apps.courses.urls'), name='category_routes'),
+    path('api/v1/', include('apps.category.urls')),
+    path('api/v1/', include('apps.courses.urls')),
+    path('api/v1/', include('apps.sections.urls')),
+    path('api/v1/', include('apps.questions.urls')),
+    path('api/v1/', include('apps.answers.urls')),
 
     path('', TemplateView.as_view(template_name='index.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
