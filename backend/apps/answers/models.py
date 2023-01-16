@@ -10,7 +10,7 @@ class Answer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     message = models.TextField()
-    accepted_answer = models.BooleanField(default=False)
+    accepted = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

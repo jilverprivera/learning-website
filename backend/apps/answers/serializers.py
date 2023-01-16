@@ -17,6 +17,6 @@ class AnswerSerializer(serializers.ModelSerializer):
             'user',
             'question',
             'message',
-            'accepted_answer',
+            'accepted',
             'date_created',
         ]
